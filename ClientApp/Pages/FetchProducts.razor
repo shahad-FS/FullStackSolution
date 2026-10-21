@@ -1,0 +1,64 @@
+@page "/fetchproducts"
+@inject HttpClient Http
+
+<h3>InventoryHub - Product List</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger" style="color: red; background: #ffe6e6; padding: 10px; border-radius: 4px;">
+        @errorMessage
+    </div>
+}
+
+<div class="product-container" style="margin-top: 20px;">
+    @if (products != null && products.Length > 0)
+    {
+        <ul style="list-style-type: none; padding: 0;">
+            @foreach (var product in products)
+            {
+                <li style="background: #f4f4f4; margin-bottom: 10px; padding: 15px; border-radius: 6px;">
+                    <strong>@product.Name</strong> - $@product.Price (Stock: @product.Stock)
+                    <br />
+                    <span style="color: #666; font-size: 0.9rem;">Category: <strong>@product.Category?.Name</strong></span>
+                </li>
+            }
+        </ul>
+    }
+    else if (errorMessage == null)
+    {
+        <p>Loading products from server...</p>
+    }
+</div>
+
+@code {
+    private Product[]? products;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await Http.GetFromJsonAsync<Product[]>("/api/productlist");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error connecting to back-end API: {ex.Message}";
+            Console.WriteLine(errorMessage);
+        }
+    }
+
+    public class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public double Price { get; set; }
+        public int Stock { get; set; }
+        public CategoryModel? Category { get; set; }
+    }
+
+    public class CategoryModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}
